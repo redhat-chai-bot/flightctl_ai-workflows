@@ -358,6 +358,26 @@ install_codex() {
     ln -sfn "$package_dir" "${SKILLS_DIR}/${package}"
     echo "  Linked ${SKILLS_DIR}/${package} -> ${package_dir}  ($SCOPE)"
   done
+
+  # Symlink each workflow's commands/ directory into Codex's commands
+  # directory so individual phases are discoverable as commands.
+  if [[ "$SCOPE" == "project" ]]; then
+    CMDS_DIR="${PROJECT_ROOT}/.agents/commands"
+  else
+    CMDS_DIR="${HOME}/.agents/commands"
+  fi
+  mkdir -p "$CMDS_DIR"
+  for package in "${PACKAGES[@]}"; do
+    local package_dir
+    package_dir="$(resolve_package_dir "$package")"
+    if [[ -d "${package_dir}/commands" ]]; then
+      ln -sfn "${package_dir}/commands" "${CMDS_DIR}/${package}"
+      echo "  Linked ${CMDS_DIR}/${package} -> ${package_dir}/commands  ($SCOPE)"
+    elif [[ -L "${CMDS_DIR}/${package}" ]]; then
+      rm -f "${CMDS_DIR}/${package}"
+      echo "  Removed stale commands symlink ${CMDS_DIR}/${package}  ($SCOPE)"
+    fi
+  done
 }
 
 # Offer a daily systemd --user notifier (Linux desktop). Default: no.

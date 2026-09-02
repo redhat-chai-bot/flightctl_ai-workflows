@@ -308,6 +308,22 @@ uninstall_codex() {
   if [[ "$SELECTIVE" == true ]] && ! has_remaining_packages "$SKILLS_DIR"; then
     uninstall_shared "$SKILLS_DIR"
   fi
+
+  # Remove command symlinks
+  if [[ "$SCOPE" == "project" ]]; then
+    CMDS_DIR="${PROJECT_ROOT}/.agents/commands"
+  else
+    CMDS_DIR="${HOME}/.agents/commands"
+  fi
+  for package in "${PACKAGES[@]}"; do
+    LINK="${CMDS_DIR}/${package}"
+    if [[ -L "$LINK" ]]; then
+      rm -f "$LINK"
+      echo "  Removed $LINK"
+    elif [[ -e "$LINK" ]]; then
+      echo "  Warning: $LINK exists but is not a symlink; skipping" >&2
+    fi
+  done
 }
 
 uninstall_link() {
